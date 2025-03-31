@@ -10,7 +10,7 @@ import sys
 print(sys.executable)
 ```
 
-With the above script marked as an executable file, a Unix-like system will execute "`/usr/bin/env -S runvenv myscriptenv testscript.py`".  Then runvenv will look in its search path for the environment named `myscriptenv`, find the python executable within that environment, and execute `testscript.py` with it.
+With the above script marked as an executable file, a Unix-like system will execute "`/usr/bin/env -S runvenv myscriptenv testscript.py`".  Then runvenv will look in its search path for the environment named `myscriptenv`, find the python executable within that environment, and execute `testscript.py` with it.  Preferencing the usage of `/usr/bin/env` to call runvenv allows the same shebang line to work identically across platforms, and both with and without root access for installing runvenv, requiring only a common environment name.  For single system tools, the direct path location of runvenv can be placed on the shebang line.
 
 ## Search path
 
@@ -95,7 +95,7 @@ Run `make`.  There are no non-standard dependencies.
 
 ## Installing
 
-Copy the produced runvenv executable to `/usr/bin` on Linux or `/usr/local/bin` on MacOS
+Copy the produced runvenv executable into `/usr/bin/` or `/usr/local/bin/` for a system level install, or somewhere in the path like `~/bin/` for a user level install.
 
 # License
 
