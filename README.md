@@ -4,13 +4,13 @@ The primary purpose of runvenv is to solve the problem of launching executable p
 
 `testscript.py:`
 ```
-#!/usr/bin/runvenv myscriptenv
+#!/usr/bin/env -S runvenv myscriptenv
 
 import sys
 print(sys.executable)
 ```
 
-With the above script marked as an executable file, a Unix-like system will execute "`/usr/bin/runvenv myscriptenv testscript.py`".  Then runvenv will look in its search path for the environment named `myscriptenv`, find the python executable within that environment, and execute `testscript.py` with it.
+With the above script marked as an executable file, a Unix-like system will execute "`/usr/bin/env -S runvenv myscriptenv testscript.py`".  Then runvenv will look in its search path for the environment named `myscriptenv`, find the python executable within that environment, and execute `testscript.py` with it.
 
 ## Search path
 
@@ -32,7 +32,7 @@ The first match found of a `myscriptenv/bin/python` will be used to execute the 
 Create a git repo with a `script.py` that requires an environment, and provide support for creating a hidden `./.venv/` directory, listed in `.gitignore`, which serves as its enviroment.  Create a symlink in `~/bin/script.py` to the `script.py` within the repo, and set `script.py` to have the shebang line:
 
 ```
-#!/usr/bin/runvenv .venv
+#!/usr/bin/env -S runvenv .venv
 ```
 
 Then the symlink within the path in `~/bin/script.py` will be executed within the environment setup in the repo directory, executing `repo/.venv/bin/python`.
@@ -42,7 +42,7 @@ Then the symlink within the path in `~/bin/script.py` will be executed within th
 Add an environment to `~/.venv` with "`python -m venv ~/.venv/mysharedenv`" and then set scripts to use this with:
 
 ```
-#!/usr/bin/runvenv mysharedenv
+#!/usr/bin/env -S runvenv mysharedenv
 ```
 
 ### System-level sharing of environments
@@ -50,7 +50,7 @@ Add an environment to `~/.venv` with "`python -m venv ~/.venv/mysharedenv`" and 
 This example is for system-level scripts requiring environments, or for multi-user systems (e.g. for data analysis) benefitting from users having access to a common environment. Create environments under `/usr/local/share/venv/` such as `/usr/local/share/venv/mysystemenv` which are readable by all, and set scripts to use:
 
 ```
-#!/usr/bin/runvenv mysystemenv
+#!/usr/bin/env -S runvenv mysystemenv
 ```
 
 ### conda environments
@@ -58,14 +58,14 @@ This example is for system-level scripts requiring environments, or for multi-us
 Create a conda environment, enabling support for different python versions, such as with "`conda create -n py313 python=3.13`" and then use this without activating any environment by setting scripts to use:
 
 ```
-#!/usr/bin/runvenv py313
+#!/usr/bin/env -S runvenv py313
 ```
 
 ### Versions of pip run directly within other environments
 
 `pip313:`
 ```
-#!/usr/bin/runvenv py313
+#!/usr/bin/env -S runvenv py313
 import re
 import sys
 from pip._internal.cli.main import main
@@ -80,7 +80,7 @@ While the example environment here started as a conda environment, and one can c
 
 `ipython313:`
 ```
-#!/usr/bin/runvenv py313
+#!/usr/bin/env -S runvenv py313
 import re
 import sys
 from IPython import start_ipython
@@ -95,7 +95,7 @@ Run `make`.  There are no non-standard dependencies.
 
 ## Installing
 
-Copy the produced runvenv executable to `/usr/bin/runvenv`
+Copy the produced runvenv executable to `/usr/bin` on Linux or `/usr/local/bin` on MacOS
 
 # License
 
