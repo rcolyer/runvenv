@@ -1,7 +1,16 @@
 #include "RC/RC.h"
 #include <limits>
 #include <stdlib.h>
+
+#ifdef WIN32
+#include <process.h>
+#define execv _execv
+#define DEFPYTHON "/bin/python.exe"
+#define ALTPYTHON "/Scripts/python.exe"
+#else
 #include <unistd.h>
+#define DEFPYTHON "/bin/python"
+#endif
 
 
 class CStrArr {
@@ -202,15 +211,22 @@ RC_MAIN {
 
   RC::RStr py_exec;
   for (auto path: path_list) {
-    RC::RStr py_try = path + "/" + env_name + "/bin/python";
+    RC::RStr py_try = path + "/" + env_name + DEFPYTHON;
     if (RC::File::Exists(py_try)) {
       py_exec = py_try;
       break;
     }
+#ifdef WIN32
+    py_try = path + "/" + env_name + ALTPYTHON;
+    if (RC::File::Exists(py_try)) {
+      py_exec = py_try;
+      break;
+    }
+#endif
   }
 
   if (py_exec.empty()) {
-    std::cerr << "Could not find " << env_name << "/bin/python in:\n  ";
+    std::cerr << "Could not find " << env_name << DEFPYTHON " in:\n  ";
     std::cerr << RC::RStr::Join(path_list, "/\n  ") << "/" << std::endl;
     return -1;
   }
