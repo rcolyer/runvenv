@@ -1,9 +1,9 @@
 CXXFLAGS=-std=c++17 -rdynamic -O3 -funroll-loops -fdiagnostics-color=always -Wall -Wextra -Wno-error=unused -Wno-error=unused-but-set-variable -Wno-error=unused-variable -Wno-unused-parameter -Wnull-dereference -Werror -Wno-deprecated-declarations
 
-ifeq ($(shell uname), Darwin) # MacOS
-    LIBS =
-else
+ifeq ($(shell uname), Linux)
     LIBS = -lrt
+else
+    LIBS =
 endif
 
 RCLIB=$(wildcard RC/*.h)
