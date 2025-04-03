@@ -5,11 +5,8 @@
 #ifdef WIN32
 #include <process.h>
 #define execv _execv
-#define DEFPYTHON "/bin/python.exe"
-#define ALTPYTHON "/Scripts/python.exe"
 #else
 #include <unistd.h>
-#define DEFPYTHON "/bin/python"
 #endif
 
 
@@ -109,21 +106,84 @@ class CStrArr {
 
 
 RC_MAIN {
-  if (args.size() < 2) {
-    std::cerr << args[0]
-      << " <environment_name> <script.py> [script_arguments] ..." << std::endl;
-    std::cerr << args[0]
-      << " <environment_name> [python_arguments] ..." << std::endl;
-    return -1;
+  RC::RStr runbase = RC::File::Basename(args[0]);
+  size_t args_off = 1;
+#ifdef WIN32
+  RC::RStr target_exec = "python.exe";
+#else
+  RC::RStr target_exec = "python";
+#endif
+  bool print_only = false;
+
+  if (runbase == "runpip") {
+    if (args.size() < 2) {
+      std::cerr << args[0]
+        << " <environment_name> [pip_arguments] ..." << std::endl;
+      return -1;
+    }
+#ifdef WIN32
+    target_exec = "pip.exe";
+#else
+    target_exec = "pip";
+#endif
+  }
+  else if (runbase == "runipyth") {
+    if (args.size() < 2) {
+      std::cerr << args[0]
+        << " <environment_name> [ipython_arguments] ..." << std::endl;
+      return -1;
+    }
+    target_exec = "ipython";
+  }
+  else {
+    if (args.size() < 2 || args[1].length() < 1 ||
+      (args[1][0] == '-' && args.size() < 3)) {
+      std::cerr << "Run python:" << std::endl;
+      std::cerr << args[0]
+        << " <environment_name> <script.py> [script_arguments] ..." << std::endl;
+      std::cerr << args[0]
+        << " <environment_name> [python_arguments] ..." << std::endl;
+      std::cerr << "Run pip:" << std::endl;
+      std::cerr << args[0]
+        << " -p <environment_name> [pip_arguments] ..." << std::endl;
+      std::cerr << "Run ipython (if installed):" << std::endl;
+      std::cerr << args[0]
+        << " -i <environment_name> [ipython_arguments] ..." << std::endl;
+      std::cerr << "Print the pathname of which python executable corresponds to the environment:" << std::endl;
+      std::cerr << args[0] << " -w <environment_name>" << std::endl;
+      return -1;
+    }
+
+    if (args[1] == "-p") {
+#ifdef WIN32
+      target_exec = "pip.exe";
+#else
+      target_exec = "pip";
+#endif
+      args_off = 2;
+    }
+    else if (args[1] == "-i") {
+      target_exec = "ipython";
+      args_off = 2;
+    }
+    else if (args[1] == "-w") {
+      print_only = true;
+      args_off = 2;
+    }
   }
 
-  RC::RStr env_name = args[1];
+  RC::RStr env_name = args[args_off];
+#ifdef WIN32
+  RC::Data1D<RC::RStr> bin_dirs{"/bin/", "/Scripts"};
+#else
+  RC::Data1D<RC::RStr> bin_dirs{"/bin/"};
+#endif
   RC::RStr py_file;
   RC::RStr py_file_dir;
   RC::Data1D<RC::RStr> py_args;
-  if (args.size() > 2) {
-    if (args[2].length()>0 && args[2][0] != '-' && RC::File::Exists(args[2])) {
-      py_file = args[2];
+  if (args.size() > args_off+1) {
+    if (args[args_off+1].length()>0 && args[args_off+1][0] != '-' && RC::File::Exists(args[args_off+1])) {
+      py_file = args[args_off+1];
       RC::RStr py_file_real = py_file;
       RC::Data1D<char> resolved(PATH_MAX);
       auto res = realpath(py_file.c_str(), resolved.Raw());
@@ -133,11 +193,11 @@ RC_MAIN {
       py_file_dir = RC::File::Dirname(py_file_real).Chomp(RC::File::divider);
     }
     else {
-      py_args += args[2];
+      py_args += args[args_off+1];
     }
   }
-  if (args.size() > 3) {
-    py_args += args.Copy(3);
+  if (args.size() > args_off+2) {
+    py_args += args.Copy(args_off+2);
   }
 
   auto home_env = getenv("HOME");
@@ -211,24 +271,28 @@ RC_MAIN {
 
   RC::RStr py_exec;
   for (auto path: path_list) {
-    RC::RStr py_try = path + "/" + env_name + DEFPYTHON;
-    if (RC::File::Exists(py_try)) {
-      py_exec = py_try;
-      break;
+    bool found = false;
+    for (auto bin_dir: bin_dirs) {
+      RC::RStr py_try = path + "/" + env_name + bin_dir + target_exec;
+      if (RC::File::Exists(py_try)) {
+        py_exec = py_try;
+        found = true;
+        break;
+      }
     }
-#ifdef WIN32
-    py_try = path + "/" + env_name + ALTPYTHON;
-    if (RC::File::Exists(py_try)) {
-      py_exec = py_try;
-      break;
-    }
-#endif
+    if (found) { break; }
   }
 
   if (py_exec.empty()) {
-    std::cerr << "Could not find " << env_name << DEFPYTHON " in:\n  ";
+    std::cerr << "Could not find " << env_name << bin_dirs[0] << target_exec
+      << " in:\n  ";
     std::cerr << RC::RStr::Join(path_list, "/\n  ") << "/" << std::endl;
     return -1;
+  }
+
+  if (print_only) {
+    std::cout << py_exec << std::endl;
+    return 0;
   }
 
   RC::Data1D<RC::RStr> cmd{py_exec};
