@@ -12,6 +12,8 @@ print(sys.executable)
 
 With the above script marked as an executable file, a Unix-like system will execute "`/usr/bin/env -S runvenv myscriptenv testscript.py`".  Then runvenv will look in its search path for the environment named `myscriptenv`, find the python executable within that environment, and execute `testscript.py` with it.  Preferencing the usage of `/usr/bin/env` to call runvenv allows the same shebang line to work identically across platforms, and both with and without root access for installing runvenv, requiring only a common environment name.  For single system tools, the direct path location of runvenv can be placed on the shebang line.
 
+Because running python directly picks up how python was invoked and not where an environment was created, this can cause cross-linked dependencies to quietly arise in environments with `python -m pip` usage that have symlinks in the path.  To help with managing a clean invocation of pip that corresponds to the single defitional path that an environment was created with, this tool also provides a `runpip myenvironment` which can be used to reliably invoke pip.
+
 ## Search path
 
 When invoked, runvenv will look for venv or conda python environments with the given name in the following order, silently skipping over options which do not exist:
@@ -61,22 +63,24 @@ Create a conda environment, enabling support for different python versions, such
 #!/usr/bin/env -S runvenv py313
 ```
 
-### Versions of pip run directly within other environments
+### Managing environments with runpip:
 
-`pip313:`
 ```
-#!/usr/bin/env -S runvenv py313
-import re
-import sys
-from pip._internal.cli.main import main
-if __name__ == '__main__':
-    sys.argv[0] = re.sub(r'(-script\.pyw|\.exe)?$', '', sys.argv[0])
-    sys.exit(main())
+runpip py313 install ipython
+runpip py313 list
 ```
 
-While the example environment here started as a conda environment, and one can certainly use conda to manage this, it is also possible if it fits one's purpose to work with pip on top of a conda start such as: "`pip313 install ipython`".
+The `runpip` utility provided will run the corresponding `bin/pip` found within the environment, and pass along everything on the line directly to pip.
 
-### Running ipython directly within other environments
+### Running ipython within a named environment
+
+```
+runipyth py313
+```
+
+The `runipyth` convenience utility will launch ipython within any provided environment.
+
+### Alternate mode of running ipython directly within other environments
 
 `ipython313:`
 ```
