@@ -29,7 +29,7 @@ The first match found of a `myscriptenv/bin/python` will be used to execute the 
 
 ## Usage examples
 
-### Positionally invariant local environment support
+### Environments in the script realpath directory
 
 Create a git repo with a `script.py` that requires an environment, and provide support for creating a hidden `./.venv/` directory, listed in `.gitignore`, which serves as its enviroment.  Create a symlink in `~/bin/script.py` to the `script.py` within the repo, and set `script.py` to have the shebang line:
 
@@ -37,7 +37,7 @@ Create a git repo with a `script.py` that requires an environment, and provide s
 #!/usr/bin/env -S runvenv .venv
 ```
 
-Then the symlink within the path in `~/bin/script.py` will be executed within the environment setup in the repo directory, executing `repo/.venv/bin/python`.
+Then the symlink within the path in `~/bin/script.py` will be properly executed within the environment setup in the repo directory, executing `repo/.venv/bin/python` to run the script.
 
 ### Shared multi-use user environments
 
